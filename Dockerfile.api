@@ -16,8 +16,16 @@ RUN apt-get update && apt-get install -y \
 # Download NLTK data
 RUN python -m nltk.downloader stopwords punkt wordnet
 
-# Download the model from MinIO
-RUN curl -o /app/model.tar.gz http://10.72.216.132:9000/model/finbert_individual2_sentiment_model.tar.gz \
+# Download the model from MinIO using credentials
+ARG MINIO_ENDPOINT="127.0.0.1:9000"
+ARG MINIO_ACCESS_KEY="sentiment_model"
+ARG MINIO_SECRET_KEY="sentiment_model"
+ARG BUCKET_NAME="models"
+ARG MODEL_PATH="finbert_individual2_sentiment_model"
+
+RUN curl -u ${MINIO_ACCESS_KEY}:${MINIO_SECRET_KEY} \
+    http://${MINIO_ENDPOINT}/${BUCKET_NAME}/${MODEL_PATH}/model.tar.gz \
+    -o /app/model.tar.gz \
     && mkdir -p /app/model \
     && tar -xzvf /app/model.tar.gz -C /app/model \
     && rm /app/model.tar.gz
