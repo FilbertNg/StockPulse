@@ -1,0 +1,39 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build and Test
+      run: |
+        docker-compose up --build -d
+        sleep 20
+        curl -X POST http://localhost:5001/analyze -H "Content-Type: application/json" -d '{"url": "https://example.com"}'
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: SSH Deploy
+      env:
+        DO_SERVER_IP: ${{ secrets.DO_SERVER_IP }}
+        DO_SERVER_SSH: ${{ secrets.DO_SERVER_SSH }}
+      run: |
+        scp docker-compose.yml $DO_SERVER_SSH@$DO_SERVER_IP:/path/to/project
+        ssh $DO_SERVER_SSH@$DO_SERVER_IP 'cd /path/to/project && docker-compose up --build -d'

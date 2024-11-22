@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis</title>
+</head>
+<body>
+    <h1>URL Sentiment Analyzer</h1>
+    <form action="/submit" method="POST">
+        <label for="url">Enter URL:</label>
+        <input type="text" id="url" name="url" required>
+        <button type="submit">Analyze</button>
+    </form>
+    {% if result %}
+    <h2>Result</h2>
+    <p><strong>Sentiment:</strong> {{ result.sentiment }}</p>
+    <p><strong>Details:</strong> {{ result.details }}</p>
+    {% endif %}
+</body>
+</html>
