@@ -13,6 +13,10 @@ RUN apt-get update && apt-get install -y \
 
 RUN python -m nltk.downloader stopwords punkt wordnet
 
+RUN curl -o /app/model.tar.gz http://10.72.216.132:9000/model/finbert_individual2_sentiment_model.tar.gz
+RUN mkdir -p /app/model && tar -xzvf /app/model.tar.gz -C /app/model
+
+
 EXPOSE 5001
 
 CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5001", "functions:app"]
