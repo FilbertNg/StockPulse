@@ -34,7 +34,7 @@ jobs:
 
     - name: Tag Built Image
       run: |
-        IMAGE_ID=$(docker images -q <service_name>)
+        IMAGE_ID=$(docker images -q $REGISTRY/$IMAGE_NAME)
         docker tag $IMAGE_ID $REGISTRY/$IMAGE_NAME:${GITHUB_SHA::7}
 
     - name: Install doctl
