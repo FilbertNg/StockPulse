@@ -8,6 +8,11 @@ on:
     branches:
       - main
 
+env:
+  REGISTRY: "registry.digitalocean.com/finpro"
+  IMAGE_NAME: "sentiment-analysis"
+
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
