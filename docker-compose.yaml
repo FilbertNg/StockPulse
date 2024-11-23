@@ -11,9 +11,11 @@ services:
       - './functions.py:/app/functions.py'
       - './model:/app/model'
     environment:
-      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
-      - AWS_ACCESS_KEY_ID=minioadmin
-      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - BUCKET_NAME=model
+      - MODEL_FILENAME=finbert_individual2_sentiment_model.tar.gz
     depends_on:
       - minio
 
