@@ -30,13 +30,24 @@ services:
     image: minio/minio:latest
     ports:
       - "9000:9000"
+      - "9001:9001" # Expose the MinIO console
     environment:
-      - AWS_ACCESS_KEY_ID=minioadmin
-      - AWS_SECRET_ACCESS_KEY=minioadmin
-      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
     command: minio server /data
     volumes:
       - minio-data:/data
+
+  minio-client:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until (mc alias set myminio http://minio:9000 minioadmin minioadmin); do echo 'Waiting for MinIO...'; sleep 2; done &&
+      mc mb -p myminio/model || true &&
+      mc cp /data/finbert_individual2_sentiment_model.tar.gz myminio/model/ || echo 'Model already uploaded';
+      "
 
 volumes:
   minio-data:
