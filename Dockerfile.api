@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
 RUN python -m nltk.downloader stopwords punkt wordnet
 
 # Set MinIO environment variables (can be overridden at build time)
-ARG MINIO_ENDPOINT="152.42.240.12:9000"
+ARG MINIO_ENDPOINT="127.0.0.1:9000"
 ARG MINIO_ACCESS_KEY="minioadmin"
 ARG MINIO_SECRET_KEY="minioadmin"
 ARG BUCKET_NAME="model"
