@@ -1,6 +1,19 @@
 FROM python:3.9-slim
+
+# Set working directory
 WORKDIR /app
-COPY app.py /app/
+
+# Copy necessary files
+COPY functions.py /app/
 COPY templates /app/templates/
-RUN pip install flask
-CMD ["python", "app.py"]
+COPY dictionaries.pkl /app/
+COPY requirements.txt /app/
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Expose port 5001 (since your Flask app uses it)
+EXPOSE 5001
+
+# Command to run the app
+CMD ["python", "functions.py"]
