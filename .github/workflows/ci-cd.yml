@@ -9,65 +9,7 @@ on:
       - main
 
 jobs:
-  deploy-minio:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Set up Docker
-      uses: docker/setup-buildx-action@v2
-
-    - name: Install Docker Compose
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y docker-compose
-
-    - name: Deploy MinIO to DigitalOcean Droplet
-      env:
-        SSH_HOST: ${{ secrets.DIGITALOCEAN_HOST }}
-        SSH_USERNAME: ${{ secrets.DIGITALOCEAN_USERNAME }}
-        SSH_PRIVATE_KEY: ${{ secrets.DIGITALOCEAN_PRIVATE_KEY }}
-      run: |
-        echo "$SSH_PRIVATE_KEY" > private_key.pem
-        chmod 600 private_key.pem
-
-        # Copy the MinIO Docker Compose file
-        scp -i private_key.pem docker-compose.minio.yml $SSH_USERNAME@$SSH_HOST:~/minio/
-        
-        # Start MinIO on the remote server
-        ssh -i private_key.pem $SSH_USERNAME@$SSH_HOST "
-          cd ~/minio &&
-          docker-compose -f docker-compose.minio.yml up -d
-        "
-
-    - name: Upload Model to MinIO
-      env:
-        SSH_HOST: ${{ secrets.DIGITALOCEAN_HOST }}
-        SSH_USERNAME: ${{ secrets.DIGITALOCEAN_USERNAME }}
-        SSH_PRIVATE_KEY: ${{ secrets.DIGITALOCEAN_PRIVATE_KEY }}
-      run: |
-        echo "$SSH_PRIVATE_KEY" > private_key.pem
-        chmod 600 private_key.pem
-
-        # Copy the model to the server
-        scp -i private_key.pem ./model/finbert_individual2_sentiment_model.tar.gz $SSH_USERNAME@$SSH_HOST:~/minio/
-
-        # Upload the model to MinIO using mc
-        ssh -i private_key.pem $SSH_USERNAME@$SSH_HOST "
-          docker run --rm -it \
-            --network=host \
-            -v ~/minio:/root/.mc \
-            minio/mc alias set myminio http://152.42.240.12:9000 minioadmin minioadmin &&
-            docker run --rm -it \
-            --network=host \
-            -v ~/minio:/root/.mc \
-            minio/mc cp /root/.mc/finbert_individual2_sentiment_model.tar.gz myminio/model/
-        "
-
   build-and-deploy:
-    needs: deploy-minio
     runs-on: ubuntu-latest
 
     steps:
@@ -85,6 +27,10 @@ jobs:
     - name: Build Docker Images
       run: docker-compose build
 
+    - name: Add Remote Host to Known Hosts
+      run: |
+        ssh-keyscan -H ${{ secrets.DIGITALOCEAN_HOST }} >> ~/.ssh/known_hosts
+
     - name: Deploy to DigitalOcean Droplet
       env:
         SSH_HOST: ${{ secrets.DIGITALOCEAN_HOST }}
@@ -93,12 +39,8 @@ jobs:
       run: |
         echo "$SSH_PRIVATE_KEY" > private_key.pem
         chmod 600 private_key.pem
-        
-        # Copy the main Docker Compose file and other files
         scp -i private_key.pem docker-compose.yaml $SSH_USERNAME@$SSH_HOST:~/sentiment-analysis/
         rsync -avz -e "ssh -i private_key.pem" . $SSH_USERNAME@$SSH_HOST:~/sentiment-analysis/
-        
-        # Start the app
         ssh -i private_key.pem $SSH_USERNAME@$SSH_HOST "
           cd ~/sentiment-analysis &&
           docker-compose down &&
