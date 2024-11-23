@@ -5,7 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.api
-    image: registry.digitalocean.com/finpro/sentiment-analysis:${GITHUB_SHA:-local}
     ports:
       - "5001:5001"
     volumes:
@@ -24,7 +23,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
-    image: registry.digitalocean.com/finpro/sentiment-frontend:${GITHUB_SHA:-local}
     ports:
       - "5000:5000"
     depends_on:

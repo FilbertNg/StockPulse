@@ -32,6 +32,11 @@ jobs:
     - name: Build Docker Images
       run: docker-compose build
 
+    - name: Tag Built Image
+      run: |
+        IMAGE_ID=$(docker images -q <service_name>)
+        docker tag $IMAGE_ID $REGISTRY/$IMAGE_NAME:${GITHUB_SHA::7}
+
     - name: Install doctl
       uses: digitalocean/action-doctl@v2
       with:
