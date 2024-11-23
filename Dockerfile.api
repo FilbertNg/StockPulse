@@ -7,7 +7,7 @@ WORKDIR /app
 COPY functions.py /app/
 COPY templates /app/templates/
 
-# Install dependencies
+# Install system dependencies and Python packages
 RUN apt-get update && apt-get install -y \
     libpq-dev build-essential curl \
     && pip install --no-cache-dir \
@@ -16,22 +16,23 @@ RUN apt-get update && apt-get install -y \
 # Download NLTK data
 RUN python -m nltk.downloader stopwords punkt wordnet
 
-# Download the model from MinIO using credentials
-ARG MINIO_ENDPOINT="127.0.0.1:9000"
-ARG MINIO_ACCESS_KEY="sentiment_model"
-ARG MINIO_SECRET_KEY="sentiment_model"
-ARG BUCKET_NAME="models"
-ARG MODEL_PATH="finbert_individual2_sentiment_model"
+# Set MinIO environment variables (can be overridden at build time)
+ARG MINIO_ENDPOINT="152.42.240.12:9000"
+ARG MINIO_ACCESS_KEY="minioadmin"
+ARG MINIO_SECRET_KEY="minioadmin"
+ARG BUCKET_NAME="model"
+ARG MODEL_FILENAME="finbert_individual2_sentiment_model.tar.gz"
 
+# Download the model from MinIO and extract it
 RUN curl -u ${MINIO_ACCESS_KEY}:${MINIO_SECRET_KEY} \
-    http://${MINIO_ENDPOINT}/${BUCKET_NAME}/${MODEL_PATH}/model.tar.gz \
+    http://${MINIO_ENDPOINT}/${BUCKET_NAME}/${MODEL_FILENAME} \
     -o /app/model.tar.gz \
     && mkdir -p /app/model \
     && tar -xzvf /app/model.tar.gz -C /app/model \
     && rm /app/model.tar.gz
 
-# Expose port
+# Expose the application port
 EXPOSE 5001
 
-# Start the application
+# Command to start the application
 CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5001", "functions:app"]
