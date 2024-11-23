@@ -31,7 +31,8 @@ jobs:
       run: |
         mkdir -p ~/.ssh
         chmod 700 ~/.ssh
-        ssh-keyscan -H <remote_host> >> ~/.ssh/known_hosts
+        ssh-keyscan -H <remote_host> >> ~/.ssh/known_hosts || true
+      shell: bash
 
     - name: Deploy to DigitalOcean Droplet
       env:
