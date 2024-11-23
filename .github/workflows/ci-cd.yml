@@ -29,10 +29,11 @@ jobs:
 
     - name: Add Remote Host to Known Hosts
       run: |
-        mkdir -p ~/.ssh
-        chmod 700 ~/.ssh
-        ssh-keyscan -H <remote_host> >> ~/.ssh/known_hosts || true
+        mkdir -p ~/.ssh            # Create .ssh directory
+        chmod 700 ~/.ssh           # Secure permissions for .ssh
+        ssh-keyscan -H <remote_host> | tee -a ~/.ssh/known_hosts > /dev/null
       shell: bash
+
 
     - name: Deploy to DigitalOcean Droplet
       env:
