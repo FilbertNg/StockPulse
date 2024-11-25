@@ -49,8 +49,9 @@ jobs:
     - name: Log in to DigitalOcean Container Registry
       uses: digitalocean/action-doctl@v2
       with:
-        username: ${{ secrets.DIGITALOCEAN_USERNAME }}
+        username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
     - name: Push Image to DigitalOcean Registry
       run: docker push $REGISTRY/$IMAGE_NAME:$TAG
