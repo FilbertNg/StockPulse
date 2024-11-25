@@ -97,6 +97,10 @@ jobs:
         rsync -avz -e "ssh -i private_key.pem" . $SSH_USERNAME@$SSH_HOST:~/sentiment-analysis/
 
         echo "Deploying application on the server..."
+        ssh -i private_key.pem $SSH_USERNAME@$SSH_HOST "
+        echo 'Logging into DigitalOcean Container Registry...'
+        echo '$DIGITALOCEAN_ACCESS_TOKEN' | docker login registry.digitalocean.com -u $DIGITALOCEAN_USERNAME --password-stdin
+        
         # Stop running container
         docker stop $(echo $IMAGE_NAME) || true
         # Remove old container
