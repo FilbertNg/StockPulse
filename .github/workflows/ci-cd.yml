@@ -111,5 +111,6 @@ jobs:
         --name $(echo $IMAGE_NAME) \
         -p 8001:8001 \
         $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7)
+        "
         echo "Deployment complete."
       shell: bash
