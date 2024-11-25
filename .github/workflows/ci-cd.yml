@@ -84,6 +84,7 @@ jobs:
         SSH_HOST: ${{ secrets.DIGITALOCEAN_HOST }}
         SSH_USERNAME: ${{ secrets.DIGITALOCEAN_USERNAME }}
         SSH_PRIVATE_KEY: ${{ secrets.DIGITALOCEAN_PRIVATE_KEY }}
+        DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
       run: |
         # Add the remote host to known hosts
         mkdir -p ~/.ssh
@@ -96,9 +97,26 @@ jobs:
         echo "Transferring files to remote server..."
         rsync -avz -e "ssh -i private_key.pem" . $SSH_USERNAME@$SSH_HOST:~/sentiment-analysis/
 
-        ssh -i private_key.pem $SSH_USERNAME@$SSH_HOST "
-           docker-compose -f docker-compose.yaml -f docker-compose.override.yaml pull &&
-           docker-compose -f docker-compose.yaml -f docker-compose.override.yaml down &&
-           docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up -d
-         "
+        echo "Deploying application on the server..."
+        ssh -i private_key.pem $SSH_USERNAME@$SSH_HOST << 'EOF'
+          echo "Logging into DigitalOcean Container Registry..."
+          echo "$DIGITALOCEAN_ACCESS_TOKEN" | docker login registry.digitalocean.com -u $SSH_USERNAME --password-stdin
+
+          echo "Stopping and removing old container..."
+          docker stop sentiment-analysis || true
+          docker rm sentiment-analysis || true
+
+          echo "Pulling the latest image..."
+          docker pull registry.digitalocean.com/finpro/sentiment-analysis:$(echo $GITHUB_SHA | head -c7)
+
+          echo "Running the new container..."
+          docker run -d \
+            --restart always \
+            --name sentiment-analysis \
+            -p 8001:8001 \
+            registry.digitalocean.com/finpro/sentiment-analysis:$(echo $GITHUB_SHA | head -c7)
+
+          echo "Deployment complete."
+        EOF
       shell: bash
+
