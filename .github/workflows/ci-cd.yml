@@ -96,21 +96,10 @@ jobs:
         echo "Transferring files to remote server..."
         rsync -avz -e "ssh -i private_key.pem" . $SSH_USERNAME@$SSH_HOST:~/sentiment-analysis/
 
-        echo "Deploying application on the server..."
         ssh -i private_key.pem $SSH_USERNAME@$SSH_HOST "
-        echo 'Logging into DigitalOcean Container Registry...'
-        echo '$DIGITALOCEAN_ACCESS_TOKEN' | docker login registry.digitalocean.com -u $DIGITALOCEAN_USERNAME --password-stdin
-        
-        # Stop running container
-        docker stop $(echo $IMAGE_NAME) || true
-        # Remove old container
-        docker rm $(echo $IMAGE_NAME) || true
-        # Run a new container from a new image
-        docker run -d \
-        --restart always \
-        --name $(echo $IMAGE_NAME) \
-        -p 8001:8001 \
-        $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7)
-        "
-        echo "Deployment complete."
+           cd ~/sentiment-analysis &&
+           docker-compose -f docker-compose.yaml -f docker-compose.override.yaml pull &&
+           docker-compose -f docker-compose.yaml -f docker-compose.override.yaml down &&
+           docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up -d
+         "
       shell: bash
