@@ -71,7 +71,6 @@ jobs:
         SSH_USERNAME: ${{ secrets.DIGITALOCEAN_USERNAME }}
         SSH_PRIVATE_KEY: ${{ secrets.DIGITALOCEAN_PRIVATE_KEY }}
         DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-        TAG: ${{ github.sha::7 }}
       run: |
         set -e
 
@@ -114,4 +113,3 @@ jobs:
           echo "Deployment complete."
         EOF
       shell: bash
-
