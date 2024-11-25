@@ -97,7 +97,6 @@ jobs:
         rsync -avz -e "ssh -i private_key.pem" . $SSH_USERNAME@$SSH_HOST:~/sentiment-analysis/
 
         ssh -i private_key.pem $SSH_USERNAME@$SSH_HOST "
-           cd ~/sentiment-analysis &&
            docker-compose -f docker-compose.yaml -f docker-compose.override.yaml pull &&
            docker-compose -f docker-compose.yaml -f docker-compose.override.yaml down &&
            docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up -d
