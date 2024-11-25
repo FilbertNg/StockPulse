@@ -37,7 +37,7 @@ jobs:
         chmod +x mc
         sudo mv mc /usr/local/bin/
 
-        mc alias set myminio http://${{ secrets.DIGITALOCEAN_HOST }}:9000 minioadmin minioadmin
+        mc alias set myminio http://152.42.240.12:9000 minioadmin minioadmin
         mc mb myminio/model || true
         mc cp -r ./finbert_individual2_sentiment_model myminio/model/
 
