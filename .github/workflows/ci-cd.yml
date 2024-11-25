@@ -28,12 +28,15 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y docker-compose
 
+    - name: Set Tag
+      run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
     - name: Create Override for Dynamic Tagging
       run: |
         echo "version: '3.9'
         services:
           api-service:
-            image: $REGISTRY/$IMAGE_NAME:${GITHUB_SHA::7}" > docker-compose.override.yaml
+            image: $REGISTRY/$IMAGE_NAME:$TAG" > docker-compose.override.yaml
 
     - name: Build Docker Images
       run: docker-compose -f docker-compose.yaml -f docker-compose.override.yaml build
@@ -49,7 +52,7 @@ jobs:
         token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
     - name: Push Image to DigitalOcean Registry
-      run: docker push $REGISTRY/$IMAGE_NAME:${GITHUB_SHA::7}
+      run: docker push $REGISTRY/$IMAGE_NAME:$TAG
 
   deploy:
     runs-on: ubuntu-latest
@@ -69,37 +72,21 @@ jobs:
         SSH_PRIVATE_KEY: ${{ secrets.DIGITALOCEAN_PRIVATE_KEY }}
         DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
       run: |
-        # Add the remote host to known hosts
+        set -e
         mkdir -p ~/.ssh
         ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
 
-        # Create the private key file
         echo "$SSH_PRIVATE_KEY" > private_key.pem
         chmod 600 private_key.pem
 
-        echo "Transferring files to remote server..."
         rsync -avz -e "ssh -i private_key.pem" . $SSH_USERNAME@$SSH_HOST:~/sentiment-analysis/
 
-        echo "Deploying application on the server..."
         ssh -i private_key.pem $SSH_USERNAME@$SSH_HOST << 'EOF'
-          echo "Logging into DigitalOcean Container Registry..."
+          set -e
           echo "$DIGITALOCEAN_ACCESS_TOKEN" | docker login registry.digitalocean.com -u $SSH_USERNAME --password-stdin
-
-          echo "Stopping and removing old container..."
           docker stop sentiment-analysis || true
           docker rm sentiment-analysis || true
-
-          echo "Pulling the latest image..."
-          docker pull registry.digitalocean.com/finpro/sentiment-analysis:$(echo $GITHUB_SHA | head -c7)
-
-          echo "Running the new container..."
-          docker run -d \
-            --restart always \
-            --name sentiment-analysis \
-            -p 8001:8001 \
-            registry.digitalocean.com/finpro/sentiment-analysis:$(echo $GITHUB_SHA | head -c7)
-
-          echo "Deployment complete."
+          docker pull registry.digitalocean.com/finpro/sentiment-analysis:$TAG
+          docker run -d --restart always --name sentiment-analysis -p 8001:8001 registry.digitalocean.com/finpro/sentiment-analysis:$TAG
         EOF
       shell: bash
-
