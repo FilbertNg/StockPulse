@@ -31,6 +31,16 @@ jobs:
     - name: Set Tag
       run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
+    - name: Set Up MinIO and Upload Model
+      run: |
+        wget https://dl.min.io/client/mc/release/linux-amd64/mc
+        chmod +x mc
+        sudo mv mc /usr/local/bin/
+
+        mc alias set myminio http://${{ secrets.DIGITALOCEAN_HOST }}:9000 minioadmin minioadmin
+        mc mb myminio/model || true
+        mc cp -r ./finbert_individual2_sentiment_model myminio/model/
+
     - name: Create Override for Dynamic Tagging
       run: |
         echo "version: '3.9'
@@ -117,7 +127,7 @@ jobs:
           docker run -d \
             --restart always \
             --name sentiment-analysis \
-            -p 8001:8001 \
+            -p 192.0.2.1:5001:5001 \
             registry.digitalocean.com/finpro/sentiment-analysis:$TAG
 
           echo "Deployment complete."
