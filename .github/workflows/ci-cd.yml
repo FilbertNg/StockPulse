@@ -71,22 +71,47 @@ jobs:
         SSH_USERNAME: ${{ secrets.DIGITALOCEAN_USERNAME }}
         SSH_PRIVATE_KEY: ${{ secrets.DIGITALOCEAN_PRIVATE_KEY }}
         DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        TAG: ${{ github.sha::7 }}
       run: |
         set -e
+
+        # Configure SSH
         mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/private_key.pem
+        chmod 600 ~/.ssh/private_key.pem
         ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
 
-        echo "$SSH_PRIVATE_KEY" > private_key.pem
-        chmod 600 private_key.pem
+        # Sync application files
+        echo "Transferring files to remote server..."
+        rsync -avz -e "ssh -i ~/.ssh/private_key.pem" . $SSH_USERNAME@$SSH_HOST:~/sentiment-analysis/
 
-        rsync -avz -e "ssh -i private_key.pem" . $SSH_USERNAME@$SSH_HOST:~/sentiment-analysis/
-
-        ssh -i private_key.pem $SSH_USERNAME@$SSH_HOST << 'EOF'
+        # Deploy the application
+        echo "Deploying application on the server..."
+        ssh -T -i ~/.ssh/private_key.pem $SSH_USERNAME@$SSH_HOST << EOF
           set -e
+          
+          # Log in to Docker registry
+          echo "Logging into DigitalOcean Container Registry..."
           echo "$DIGITALOCEAN_ACCESS_TOKEN" | docker login registry.digitalocean.com -u $SSH_USERNAME --password-stdin
+
+          # Stop and clean up old container
+          echo "Stopping and removing old container..."
           docker stop sentiment-analysis || true
           docker rm sentiment-analysis || true
+
+          # Pull the latest image
+          echo "Pulling the latest image..."
           docker pull registry.digitalocean.com/finpro/sentiment-analysis:$TAG
-          docker run -d --restart always --name sentiment-analysis -p 8001:8001 registry.digitalocean.com/finpro/sentiment-analysis:$TAG
+
+          # Run the new container
+          echo "Running the new container..."
+          docker run -d \
+            --restart always \
+            --name sentiment-analysis \
+            -p 8001:8001 \
+            registry.digitalocean.com/finpro/sentiment-analysis:$TAG
+
+          echo "Deployment complete."
         EOF
       shell: bash
+
