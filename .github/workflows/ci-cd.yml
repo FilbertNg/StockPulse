@@ -45,6 +45,8 @@ jobs:
 
     - name: Log in to DigitalOcean Container Registry
       run: doctl registry login --expiry-seconds 600
+      with:
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
     - name: Push Image to DigitalOcean Registry
       run: docker push $REGISTRY/$IMAGE_NAME:${GITHUB_SHA::7}
