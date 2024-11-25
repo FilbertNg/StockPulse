@@ -65,6 +65,13 @@ jobs:
         ssh-keyscan -H ${{ secrets.DIGITALOCEAN_HOST }} >> ~/.ssh/known_hosts
       shell: bash
 
+    - name: Set GitHub SHA Tag
+      run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+    - name: Debug TAG Variable
+      run: |
+        echo "TAG is set to: $TAG"
+
     - name: Deploy to DigitalOcean Droplet
       env:
         SSH_HOST: ${{ secrets.DIGITALOCEAN_HOST }}
@@ -89,6 +96,9 @@ jobs:
         ssh -T -i ~/.ssh/private_key.pem $SSH_USERNAME@$SSH_HOST << EOF
           set -e
           
+          # Export TAG for remote session
+          TAG=$TAG
+
           # Log in to Docker registry
           echo "Logging into DigitalOcean Container Registry..."
           echo "$DIGITALOCEAN_ACCESS_TOKEN" | docker login registry.digitalocean.com -u $SSH_USERNAME --password-stdin
