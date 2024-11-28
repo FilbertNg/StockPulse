@@ -31,35 +31,6 @@ jobs:
     - name: Set Tag
       run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
-    - name: Install MinIO Client
-      run: |
-        wget https://dl.min.io/client/mc/release/linux-amd64/mc
-        chmod +x mc
-        sudo mv mc /usr/local/bin/
-        mc --version
-
-    - name: Set Up and Upload Model to MinIO
-      run: |
-        echo "Waiting for MinIO server to become available..."
-        for i in {1..10}; do
-          if curl -s http://${{ secrets.DIGITALOCEAN_HOST }}:9000 >/dev/null; then
-            echo "MinIO is available!"
-            break
-          fi
-          echo "MinIO not available yet, retrying in 5 seconds..."
-          sleep 5
-        done
-
-        mc alias set myminio https://${{ secrets.DIGITALOCEAN_HOST }}:9000 \
-          ${{ secrets.MINIO_ACCESS_KEY }} \
-          ${{ secrets.MINIO_SECRET_KEY }} --api S3v4 --insecure || exit 1
-
-        echo "Creating bucket if it does not exist..."
-        mc mb --ignore-existing myminio/model
-
-        echo "Uploading model directory to MinIO..."
-        mc cp --recursive ./finbert_individual2_sentiment_model myminio/model/
-
     - name: Create Override for Dynamic Tagging
       run: |
         echo "version: '3.9'
@@ -97,10 +68,6 @@ jobs:
     - name: Set GitHub SHA Tag
       run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
-    - name: Debug TAG Variable
-      run: |
-        echo "TAG is set to: $TAG"
-
     - name: Deploy to DigitalOcean Droplet
       env:
         SSH_HOST: ${{ secrets.DIGITALOCEAN_HOST }}
@@ -116,9 +83,10 @@ jobs:
         chmod 600 ~/.ssh/private_key.pem
         ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
 
-        # Sync application files
+        # Sync application files and model directory to the server
         echo "Transferring files to remote server..."
         rsync -avz -e "ssh -i ~/.ssh/private_key.pem" . $SSH_USERNAME@$SSH_HOST:~/sentiment-analysis/
+        rsync -avz -e "ssh -i ~/.ssh/private_key.pem" /opt/models/finbert_individual2_sentiment_model $SSH_USERNAME@$SSH_HOST:/opt/models/
 
         # Deploy the application
         echo "Deploying application on the server..."
@@ -141,12 +109,13 @@ jobs:
           echo "Pulling the latest image..."
           docker pull registry.digitalocean.com/finpro/sentiment-analysis:$TAG
 
-          # Run the new container
+          # Run the new container, mounting the model directory
           echo "Running the new container..."
           docker run -d \
             --restart always \
             --name sentiment-analysis \
             -p 192.0.2.1:5001:5001 \
+            -v /opt/models/finbert_individual2_sentiment_model:/app/model \
             registry.digitalocean.com/finpro/sentiment-analysis:$TAG
 
           echo "Deployment complete."

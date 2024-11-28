@@ -10,15 +10,9 @@ services:
       - "5001:5001"
     volumes:
       - './functions.py:/app/functions.py'
-      - './model:/app/model'
+      - '/opt/models/finbert_individual2_sentiment_model:/app/model'
     environment:
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
-      - BUCKET_NAME=model
-      - MODEL_FILENAME=finbert_individual2_sentiment_model.tar.gz
-    depends_on:
-      - minio
+      - MODEL_FILENAME=finbert_individual2_sentiment_model
 
   frontend:
     build:
@@ -29,38 +23,3 @@ services:
       - "5000:5000"
     depends_on:
       - api-service
-
-  minio:
-    image: minio/minio:latest
-    container_name: minio
-    ports:
-      - "9000:9000"
-    environment:
-      MINIO_ROOT_USER: $MINIO_ACCESS_KEY
-      MINIO_ROOT_PASSWORD: $MINIO_SECRET_KEY
-    command: minio server /data
-    volumes:
-      - ./minio-data:/data
-
-  minio-client:
-    image: minio/mc:latest
-    depends_on:
-      - minio
-    volumes:
-      - ./finbert_individual2_sentiment_model:/data/model
-    entrypoint: >
-      /bin/sh -c "
-      echo 'Waiting for MinIO to be ready...';
-      until (mc alias set myminio http://minio:9000 $MINIO_ACCESS_KEY $MINIO_SECRET_KEY); do 
-        echo 'Waiting for MinIO...'; 
-        sleep 2; 
-      done &&
-      echo 'Creating bucket...'; 
-      mc mb --ignore-existing myminio/model; 
-      echo 'Uploading model...'; 
-      mc cp --recursive /data/model myminio/model/;
-      echo 'MinIO setup complete.';
-      "
-
-volumes:
-  minio-data:
