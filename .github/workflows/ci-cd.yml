@@ -86,7 +86,6 @@ jobs:
         # Sync application files and model directory to the server
         echo "Transferring files to remote server..."
         rsync -avz -e "ssh -i ~/.ssh/private_key.pem" . $SSH_USERNAME@$SSH_HOST:~/sentiment-analysis/
-        rsync -avz -e "ssh -i ~/.ssh/private_key.pem" /opt/models/finbert_individual2_sentiment_model $SSH_USERNAME@$SSH_HOST:/opt/models/
 
         # Deploy the application
         echo "Deploying application on the server..."
