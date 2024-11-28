@@ -50,7 +50,7 @@ jobs:
           sleep 5
         done
 
-        mc alias set myminio http://${{ secrets.DIGITALOCEAN_HOST }}:9000 \
+        mc alias set myminio https://${{ secrets.DIGITALOCEAN_HOST }}:9000 \
           ${{ secrets.MINIO_ACCESS_KEY }} \
           ${{ secrets.MINIO_SECRET_KEY }} || exit 1
 
