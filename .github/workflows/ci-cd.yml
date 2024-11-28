@@ -31,17 +31,15 @@ jobs:
     - name: Set Tag
       run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
-    - name: Set Up MinIO and Upload Model
+    - name: Install MinIO Client
       run: |
-        # Download MinIO client
         wget https://dl.min.io/client/mc/release/linux-amd64/mc
         chmod +x mc
         sudo mv mc /usr/local/bin/
-
-        # Verify MinIO client installation
         mc --version
 
-        # Wait for MinIO to be accessible
+    - name: Set Up and Upload Model to MinIO
+      run: |
         echo "Waiting for MinIO server to become available..."
         for i in {1..10}; do
           if curl -s http://${{ secrets.DIGITALOCEAN_HOST }}:9000 >/dev/null; then
@@ -52,16 +50,15 @@ jobs:
           sleep 5
         done
 
-        # Set up alias for MinIO
-        mc alias set myminio http://${{ secrets.DIGITALOCEAN_HOST }}:9000 minioadmin minioadmin || exit 1
+        mc alias set myminio http://${{ secrets.DIGITALOCEAN_HOST }}:9000 \
+          ${{ secrets.MINIO_ACCESS_KEY }} \
+          ${{ secrets.MINIO_SECRET_KEY }} || exit 1
 
-        # Create bucket if not exists
-        mc mb myminio/model || echo "Bucket already exists"
+        echo "Creating bucket if it does not exist..."
+        mc mb --ignore-existing myminio/model
 
-        # Upload the model to MinIO
-        echo "Uploading model files to MinIO..."
-        mc cp -r ./finbert_individual2_sentiment_model myminio/model/
-
+        echo "Uploading model directory to MinIO..."
+        mc cp --recursive ./finbert_individual2_sentiment_model myminio/model/
 
     - name: Create Override for Dynamic Tagging
       run: |
