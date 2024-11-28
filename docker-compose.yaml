@@ -46,11 +46,20 @@ services:
     image: minio/mc:latest
     depends_on:
       - minio
+     volumes:
+      - ./finbert_individual2_sentiment_model.tar.gz:/data/finbert_individual2_sentiment_model.tar.gz
     entrypoint: >
       /bin/sh -c "
-      until (mc alias set myminio http://minio:9000 minioadmin minioadmin); do echo 'Waiting for MinIO...'; sleep 2; done &&
-      mc mb -p myminio/model || true &&
+      echo 'Waiting for MinIO to be ready...';
+      until (mc alias set myminio http://minio:9000 minioadmin minioadmin); do 
+        echo 'Waiting for MinIO...'; 
+        sleep 2; 
+      done &&
+      echo 'Creating bucket...'; 
+      mc mb -p myminio/model || echo 'Bucket already exists'; 
+      echo 'Uploading model...'; 
       mc cp /data/finbert_individual2_sentiment_model.tar.gz myminio/model/ || echo 'Model already uploaded';
+      echo 'MinIO setup complete.';
       "
 
 volumes:

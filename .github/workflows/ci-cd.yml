@@ -33,13 +33,35 @@ jobs:
 
     - name: Set Up MinIO and Upload Model
       run: |
+        # Download MinIO client
         wget https://dl.min.io/client/mc/release/linux-amd64/mc
         chmod +x mc
         sudo mv mc /usr/local/bin/
 
-        mc alias set myminio http://152.42.240.12:9000 minioadmin minioadmin
-        mc mb myminio/model || true
+        # Verify MinIO client installation
+        mc --version
+
+        # Wait for MinIO to be accessible
+        echo "Waiting for MinIO server to become available..."
+        for i in {1..10}; do
+          if curl -s http://${{ secrets.DIGITALOCEAN_HOST }}:9000 >/dev/null; then
+            echo "MinIO is available!"
+            break
+          fi
+          echo "MinIO not available yet, retrying in 5 seconds..."
+          sleep 5
+        done
+
+        # Set up alias for MinIO
+        mc alias set myminio http://${{ secrets.DIGITALOCEAN_HOST }}:9000 minioadmin minioadmin || exit 1
+
+        # Create bucket if not exists
+        mc mb myminio/model || echo "Bucket already exists"
+
+        # Upload the model to MinIO
+        echo "Uploading model files to MinIO..."
         mc cp -r ./finbert_individual2_sentiment_model myminio/model/
+
 
     - name: Create Override for Dynamic Tagging
       run: |
