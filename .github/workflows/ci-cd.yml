@@ -52,7 +52,7 @@ jobs:
 
         mc alias set myminio https://${{ secrets.DIGITALOCEAN_HOST }}:9000 \
           ${{ secrets.MINIO_ACCESS_KEY }} \
-          ${{ secrets.MINIO_SECRET_KEY }} || exit 1
+          ${{ secrets.MINIO_SECRET_KEY }} --api S3v4 --insecure || exit 1
 
         echo "Creating bucket if it does not exist..."
         mc mb --ignore-existing myminio/model
