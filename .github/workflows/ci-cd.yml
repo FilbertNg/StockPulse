@@ -89,15 +89,15 @@ jobs:
 
         # Deploy the application
         echo "Deploying application on the server..."
-        ssh -T -i ~/.ssh/private_key.pem $SSH_USERNAME@$SSH_HOST << 'EOF'
+        ssh -T -i ~/.ssh/private_key.pem $SSH_USERNAME@$SSH_HOST << "EOF"
           set -e
           
-          # Export TAG for remote session
-          TAG=${TAG}
+          # Define TAG variable manually for SSH session
+          export TAG=${TAG}
 
           # Log in to Docker registry
           echo "Logging into DigitalOcean Container Registry..."
-          echo "$DIGITALOCEAN_ACCESS_TOKEN" | docker login registry.digitalocean.com -u $SSH_USERNAME --password-stdin
+          echo "$DIGITALOCEAN_ACCESS_TOKEN" | docker login registry.digitalocean.com --username $SSH_USERNAME --password-stdin
 
           # Stop and clean up old container
           echo "Stopping and removing old container..."
