@@ -1,29 +1,20 @@
 #!/bin/bash
 
-# Variables for MinIO
-MINIO_ENDPOINT=${MINIO_ENDPOINT:-"minio:9000"}
-MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-"minioadmin"}
-MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-"minioadmin"}
-BUCKET_NAME=${BUCKET_NAME:-"model"}
-MODEL_FILENAME=${MODEL_FILENAME:-"finbert_individual2_sentiment_model.tar.gz"}
+# Path to the preloaded model directory
+MODEL_DIR=${MODEL_DIR:-"/opt/models/finbert_individual2_sentiment_model"}
 
-# Wait for MinIO to be available
-echo "Waiting for MinIO to be available at $MINIO_ENDPOINT..."
-until curl -u "$MINIO_ACCESS_KEY:$MINIO_SECRET_KEY" -f "http://$MINIO_ENDPOINT/$BUCKET_NAME/$MODEL_FILENAME"; do
-    echo "MinIO is not available yet. Retrying in 5 seconds..."
-    sleep 5
-done
+# Check if the model directory exists
+if [ ! -d "$MODEL_DIR" ]; then
+    echo "Model directory not found at $MODEL_DIR."
+    echo "Please ensure the model directory is available before starting the application."
+    exit 1
+fi
 
-# Download and extract the model
-echo "Downloading the model from MinIO..."
-curl -u "$MINIO_ACCESS_KEY:$MINIO_SECRET_KEY" \
-    "http://$MINIO_ENDPOINT/$BUCKET_NAME/$MODEL_FILENAME" \
-    -o /app/model.tar.gz
-
-echo "Extracting the model..."
-mkdir -p /app/model
-tar -xzvf /app/model.tar.gz -C /app/model
-rm /app/model.tar.gz
+# Ensure the application model path is set up
+APP_MODEL_PATH="/app/model"
+echo "Setting up model directory for the application..."
+mkdir -p "$APP_MODEL_PATH"
+cp -r "$MODEL_DIR"/* "$APP_MODEL_PATH"
 
 # Start the application
 echo "Starting the application..."
