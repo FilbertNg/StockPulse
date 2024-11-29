@@ -93,13 +93,11 @@ jobs:
           set -e
           
           # Export TAG for remote session
-          TAG=$TAG
+          TAG=${TAG}
 
           # Log in to Docker registry
           echo "Logging into DigitalOcean Container Registry..."
-          export DOCKER_CONFIG=/tmp/docker-config
-          mkdir -p $DOCKER_CONFIG
-          echo "$DIGITALOCEAN_ACCESS_TOKEN" | docker login registry.digitalocean.com -u "$SSH_USERNAME" --password-stdin --config $DOCKER_CONFIG
+          echo "$DIGITALOCEAN_ACCESS_TOKEN" | docker login registry.digitalocean.com -u $SSH_USERNAME --password-stdin
 
           # Stop and clean up old container
           echo "Stopping and removing old container..."
