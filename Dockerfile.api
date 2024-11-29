@@ -7,6 +7,7 @@ WORKDIR /app
 COPY functions.py /app/
 COPY templates /app/templates/
 COPY start.sh /app/
+COPY dictionaries.pkl /app/
 
 # Install dependencies
 RUN apt-get update && apt-get install -y curl \
