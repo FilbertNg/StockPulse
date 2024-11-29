@@ -97,7 +97,9 @@ jobs:
 
           # Log in to Docker registry
           echo "Logging into DigitalOcean Container Registry..."
-          echo "$DIGITALOCEAN_ACCESS_TOKEN" | docker login registry.digitalocean.com -u $SSH_USERNAME --password-stdin
+          export DOCKER_CONFIG=/tmp/docker-config
+          mkdir -p $DOCKER_CONFIG
+          echo "$DIGITALOCEAN_ACCESS_TOKEN" | docker login registry.digitalocean.com -u "$SSH_USERNAME" --password-stdin --config $DOCKER_CONFIG
 
           # Stop and clean up old container
           echo "Stopping and removing old container..."
@@ -115,7 +117,7 @@ jobs:
             --name sentiment-analysis \
             -p 5001:5001 \
             -v /opt/models/finbert_individual2_sentiment_model:/opt/models/finbert_individual2_sentiment_model \
-            registry.digitalocean.com/finpro/sentiment-analysis:$<TAG>
+            registry.digitalocean.com/finpro/sentiment-analysis:$TAG
 
           echo "Deployment complete."
         EOF
