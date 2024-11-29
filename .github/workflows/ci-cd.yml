@@ -48,8 +48,7 @@ jobs:
 
     - name: Log in to DigitalOcean Container Registry
       run: |
-        doctl auth init --access-token ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-        doctl registry login
+        run: echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login registry.digitalocean.com -u doctl --password-stdin
 
     - name: Push Image to DigitalOcean Registry
       run: docker push $REGISTRY/$IMAGE_NAME:$TAG
