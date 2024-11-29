@@ -5,7 +5,6 @@ from nltk.tokenize import sent_tokenize
 import nltk
 nltk.download('stopwords')
 nltk.download('punkt')
-nltk.download('punkt_tab')
 nltk.download('wordnet')
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
@@ -13,7 +12,6 @@ from collections import Counter
 import random
 from newspaper import Article
 import time
-import boto3
 import os
 
 label_mapping = {'positive': 0, 'neutral': 1, 'negative': 2}
@@ -27,35 +25,8 @@ def load_dictionaries(filename):
 # Load dictionaries
 title_ticker_dict, ticker_title_dict = load_dictionaries("dictionaries.pkl")
 
-
-
-def download_model_from_minio():
-    """Download model files from MinIO to the local filesystem."""
-    s3_client = boto3.client(
-        's3',
-        endpoint_url=os.getenv("MLFLOW_S3_ENDPOINT_URL"),
-        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-    )
-
-    bucket_name = "models"
-    model_prefix = "finbert_individual2_sentiment_model"
-    local_dir = "./model/finbert_individual2_sentiment_model"
-
-    if not os.path.exists(local_dir):
-        os.makedirs(local_dir)
-
-    # Download files
-    for obj in s3_client.list_objects_v2(Bucket=bucket_name, Prefix=model_prefix)["Contents"]:
-        local_file = os.path.join(local_dir, obj["Key"].split("/")[-1])
-        s3_client.download_file(bucket_name, obj["Key"], local_file)
-
-# Ensure the model is downloaded before loading
-download_model_from_minio()
-
-# Load the model after downloading
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-model_save_path = "./model/finbert_individual2_sentiment_model"
+# Load the model directly from the provided directory
+model_save_path = "/opt/models/finbert_individual2_sentiment_analysis"
 model = AutoModelForSequenceClassification.from_pretrained(model_save_path)
 tokenizer = AutoTokenizer.from_pretrained(model_save_path)
 
@@ -179,9 +150,6 @@ def url_to_sentiment_analysis(url, model, tokenizer):
     sentiments = ticker_sentiment_analysis(cleaned_text, model, tokenizer)
     
     return sentiments
-
-
-
 
 
 from flask import Flask, request, jsonify
