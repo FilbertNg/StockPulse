@@ -114,8 +114,8 @@ jobs:
             --restart always \
             --name sentiment-analysis \
             -p 5001:5001 \
-            -v /opt/models/finbert_individual2_sentiment_model:/app/model \
-            registry.digitalocean.com/finpro/sentiment-analysis:$TAG
+            -v /opt/models/finbert_individual2_sentiment_model:/opt/models/finbert_individual2_sentiment_model \
+            registry.digitalocean.com/finpro/sentiment-analysis:<TAG>
 
           echo "Deployment complete."
         EOF
