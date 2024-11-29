@@ -171,7 +171,7 @@ def submit():
 
     try:
         # Perform sentiment analysis
-        sentiments = url_to_sentiment_analysis(url, model=None, tokenizer=None)
+        sentiments = url_to_sentiment_analysis(url, model, tokenizer)
         if not sentiments:
             result = {"error": "No tickers found or failed to analyze the article."}
         else:
