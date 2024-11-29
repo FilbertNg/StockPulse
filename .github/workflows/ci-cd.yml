@@ -89,7 +89,7 @@ jobs:
 
         # Deploy the application
         echo "Deploying application on the server..."
-        ssh -T -i ~/.ssh/private_key.pem $SSH_USERNAME@$SSH_HOST << EOF
+        ssh -T -i ~/.ssh/private_key.pem $SSH_USERNAME@$SSH_HOST << 'EOF'
           set -e
           
           # Export TAG for remote session
@@ -115,7 +115,7 @@ jobs:
             --name sentiment-analysis \
             -p 5001:5001 \
             -v /opt/models/finbert_individual2_sentiment_model:/opt/models/finbert_individual2_sentiment_model \
-            registry.digitalocean.com/finpro/sentiment-analysis:<TAG>
+            registry.digitalocean.com/finpro/sentiment-analysis:$<TAG>
 
           echo "Deployment complete."
         EOF
