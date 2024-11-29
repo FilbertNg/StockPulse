@@ -170,16 +170,13 @@ def submit():
         return render_template('index.html', result={"error": "No URL provided."})
 
     try:
+        # Check if the request is from an API client
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify({"url": url, "sentiments": sentiments}), 200
+            
         # Perform sentiment analysis
         sentiments = url_to_sentiment_analysis(url, model, tokenizer)
-        if not sentiments:
-            result = {"error": "No tickers found or failed to analyze the article."}
-        else:
-            # Format the result for display
-            result = {
-                "sentiments": sentiments
-            }
-        return render_template('index.html', result=result)
+        return render_template('index.html', result={"sentiments": sentiments})
     except Exception as e:
         return render_template('index.html', result={"error": str(e)})
 
