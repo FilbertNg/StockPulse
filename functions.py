@@ -26,7 +26,7 @@ def load_dictionaries(filename):
 title_ticker_dict, ticker_title_dict = load_dictionaries("dictionaries.pkl")
 
 # Load the model directly from the provided directory
-model_save_path = "/opt/models"
+model_save_path = "/opt/models/finbert_individual2_sentiment_model"
 model = AutoModelForSequenceClassification.from_pretrained(model_save_path)
 tokenizer = AutoTokenizer.from_pretrained(model_save_path)
 
