@@ -13,9 +13,17 @@
         <button type="submit">Analyze</button>
     </form>
     {% if result %}
-    <h2>Result</h2>
-    <p><strong>Sentiment:</strong> {{ result.sentiment }}</p>
-    <p><strong>Details:</strong> {{ result.details }}</p>
+        {% if result.error %}
+            <h2>Error</h2>
+            <p>{{ result.error }}</p>
+        {% else %}
+            <h2>Analysis Result</h2>
+            <ul>
+                {% for sentiment in result.sentiments %}
+                    <li><strong>{{ sentiment.ticker }}:</strong> {{ sentiment.sentiment }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
     {% endif %}
 </body>
 </html>
