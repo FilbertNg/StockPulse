@@ -131,7 +131,7 @@ def preprocess_text(text):
     return text
 
 
-def url_to_sentiment_analysis(url, model, tokenizer):
+def url_to_sentiment_analysis(url, model=model, tokenizer=tokenizer):
     """
     Convert a URL to ticker-level sentiment analysis.
     1. Fetch and preprocess the article content from the URL.
@@ -152,43 +152,36 @@ def url_to_sentiment_analysis(url, model, tokenizer):
     return sentiments
 
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 
 # Initialize Flask App
 app = Flask(__name__)
 
-@app.route('/analyze', methods=['POST'])
-def analyze():
-    """
-    Accepts a URL, fetches its content, performs sentiment analysis,
-    and returns the result.
-    """
-    data = request.get_json()
-    url = data.get('url', None)
-
-    if not url:
-        return jsonify({"error": "URL is required"}), 400
-
-    try:
-        # Process URL
-        sentiments = url_to_sentiment_analysis(url, model, tokenizer)
-        return jsonify({"url": url, "sentiments": sentiments}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-from flask import render_template
-
+# Route for Home Page
 @app.route('/', methods=['GET'])
 def home():
     return render_template('index.html')
 
+# Route for Form Submission
 @app.route('/submit', methods=['POST'])
 def submit():
-    url = request.form['url']
-    response = analyze()
-    result = response.get_json()
-    return render_template('index.html', result=result)
+    url = request.form.get('url', None)
+    if not url:
+        return render_template('index.html', result={"error": "No URL provided."})
 
+    try:
+        # Perform sentiment analysis
+        sentiments = url_to_sentiment_analysis(url, model=None, tokenizer=None)
+        if not sentiments:
+            result = {"error": "No tickers found or failed to analyze the article."}
+        else:
+            # Format the result for display
+            result = {
+                "sentiments": sentiments
+            }
+        return render_template('index.html', result=result)
+    except Exception as e:
+        return render_template('index.html', result={"error": str(e)})
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5001)
