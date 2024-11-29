@@ -11,7 +11,7 @@ COPY start.sh /app/
 # Install dependencies
 RUN apt-get update && apt-get install -y curl \
     && pip install --no-cache-dir \
-    torch transformers nltk newspaper3k flask gunicorn boto3 lxml[html_clean] \
+    torch transformers nltk newspaper3k flask gunicorn boto3 lxml_html_clean \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
