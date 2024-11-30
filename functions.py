@@ -165,7 +165,7 @@ def home():
 # Route for Form Submission
 @app.route('/submit', methods=['POST'])
 def submit():
-    url = request.form.get('url', None)
+    url = request.form.get('url')
     if not url:
         return render_template('index.html', result={"error": "No URL provided."})
 
